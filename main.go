@@ -10,4 +10,5 @@ func main() {
 	network := scanner.NetworkClient(ipBase)
 
 	log.Info(network.FindIPs())
+	log.Info(network.FindDevices())
 }
