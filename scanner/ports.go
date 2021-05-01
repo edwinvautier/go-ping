@@ -3,25 +3,25 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"github.com/schollz/progressbar/v3"
 	"net"
 	"strings"
 	"sync"
 	"time"
-	"github.com/schollz/progressbar/v3"
 )
 
 func ScanPort(ip string, port int) bool {
 	target := fmt.Sprintf("%s:%d", ip, port)
-	conn, err := net.DialTimeout("tcp", target, 500 * time.Millisecond)
+	conn, err := net.DialTimeout("tcp", target, 500*time.Millisecond)
 	if err != nil {
-			if strings.Contains(err.Error(), "too many open files") {
-					time.Sleep(500 * time.Millisecond)
-					return ScanPort(ip, port)
-			}
+		if strings.Contains(err.Error(), "too many open files") {
+			time.Sleep(500 * time.Millisecond)
+			return ScanPort(ip, port)
+		}
 
-			return false
+		return false
 	}
-	
+
 	conn.Close()
 	return true
 }
@@ -39,9 +39,9 @@ func (n *Network) ScanDevice(ip string, l int, portChan chan Port) {
 			defer n.Lock.Release(1)
 			defer wg.Done()
 			defer bar.Add(1)
-			portChan <- Port {
+			portChan <- Port{
 				Number: port,
-				Open: ScanPort(ip, port),
+				Open:   ScanPort(ip, port),
 			}
 		}(port)
 	}
@@ -49,10 +49,10 @@ func (n *Network) ScanDevice(ip string, l int, portChan chan Port) {
 
 type Port struct {
 	Number int
-	Open bool
+	Open   bool
 }
 
-func (n *Network)ScanAllDevicesPorts(devices *[]*Device) {
+func (n *Network) ScanAllDevicesPorts(devices *[]*Device) {
 	for _, device := range *devices {
 		portChan := make(chan Port, 9999)
 		n.ScanDevice(device.IP, 9999, portChan)
