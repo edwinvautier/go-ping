@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-ping/ping"
+	"github.com/schollz/progressbar/v3"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
 )
@@ -54,11 +55,13 @@ func (n *Network) FindIPs() []string {
 	for ip := range ipChan {
 		addresses = append(addresses, ip)
 	}
-	
+
 	return addresses
 }
 
 func (n *Network) pingAll(ipChan chan string) {
+	bar := progressbar.Default(254)
+	bar.Add(1)
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
@@ -70,6 +73,7 @@ func (n *Network) pingAll(ipChan chan string) {
 		go func(fullIP string) {
 			defer n.Lock.Release(1)
 			defer wg.Done()
+			defer bar.Add(1)
 			if n.PingIP(fullIP) {
 				ipChan <- fullIP
 			}
