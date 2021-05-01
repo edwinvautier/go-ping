@@ -17,7 +17,7 @@ import (
 func (n *Network) FindDevices() []Device {
 	records := GetARPRecords()
 	recordsNumber := int64(len(records))
-	
+
 	constructors := make([]string, 0)
 	constructorChan := make(chan string, recordsNumber)
 	n.FindAllConstructors(constructorChan, records)
@@ -25,13 +25,13 @@ func (n *Network) FindDevices() []Device {
 	for constructor := range constructorChan {
 		constructors = append(constructors, constructor)
 	}
-	
+
 	devices := make([]Device, 0)
 	for i, record := range records {
-		device := Device {
+		device := Device{
 			Constructor: constructors[i],
-			IP: record.IP,
-			Mac: record.Mac,
+			IP:          record.IP,
+			Mac:         record.Mac,
 		}
 		devices = append(devices, device)
 	}
@@ -78,7 +78,7 @@ func GetConstructor(mac string) string {
 	if err != nil {
 		return "not-found"
 	}
-	
+
 	company := string(body)
 	return company
 }
@@ -88,14 +88,14 @@ func (n *Network) FindAllConstructors(constructorChan chan string, records []*AR
 	bar := progressbar.Default(recordsNumber)
 	bar.Describe("mac lookup API")
 	bar.Add(1)
-	
+
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
 	for _, record := range records {
 		n.Lock.Acquire(context.TODO(), 1)
 		wg.Add(1)
-		
+
 		go func(record ARPRecord) {
 			defer n.Lock.Release(1)
 			defer wg.Done()
@@ -106,5 +106,5 @@ func (n *Network) FindAllConstructors(constructorChan chan string, records []*AR
 }
 
 type MACLookupBody struct {
-	Company	string
+	Company string
 }
