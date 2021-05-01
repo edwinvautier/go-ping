@@ -30,7 +30,7 @@ type Device struct {
 	IP          string
 	Mac         string
 	Constructor string
-	OpenPorts   []uint
+	OpenPorts   []Port
 }
 
 func ulimit() int64 {

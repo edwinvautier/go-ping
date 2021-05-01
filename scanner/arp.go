@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (n *Network) FindDevices() []Device {
+func (n *Network) FindDevices() []*Device {
 	records := GetARPRecords()
 	recordsNumber := int64(len(records))
 
@@ -26,14 +26,15 @@ func (n *Network) FindDevices() []Device {
 		constructors = append(constructors, constructor)
 	}
 
-	devices := make([]Device, 0)
+	devices := make([]*Device, 0)
 	for i, record := range records {
+		ip := strings.Trim(record.IP, "()")
 		device := Device{
 			Constructor: constructors[i],
-			IP:          record.IP,
+			IP:          ip,
 			Mac:         record.Mac,
 		}
-		devices = append(devices, device)
+		devices = append(devices, &device)
 	}
 
 	return devices
