@@ -12,10 +12,10 @@ import (
 
 func ScanPort(ip string, port int) bool {
 	target := fmt.Sprintf("%s:%d", ip, port)
-	conn, err := net.DialTimeout("tcp", target, 500*time.Millisecond)
+	conn, err := net.DialTimeout("tcp", target, 900*time.Millisecond)
 	if err != nil {
 		if strings.Contains(err.Error(), "too many open files") {
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(900 * time.Millisecond)
 			return ScanPort(ip, port)
 		}
 
@@ -54,8 +54,8 @@ type Port struct {
 
 func (n *Network) ScanAllDevicesPorts(devices *[]*Device) {
 	for _, device := range *devices {
-		portChan := make(chan Port, 9999)
-		n.ScanDevice(device.IP, 9999, portChan)
+		portChan := make(chan Port, 65535)
+		n.ScanDevice(device.IP, 65535, portChan)
 		close(portChan)
 		ports := make([]Port, 0)
 		for port := range portChan {

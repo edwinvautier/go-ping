@@ -18,8 +18,8 @@ func (n *Network) FindDevices() []*Device {
 	records := GetARPRecords()
 	recordsNumber := int64(len(records))
 
-	constructors := make([]string, 0)
-	constructorChan := make(chan string, recordsNumber)
+	constructors := make([]ConstructorRecord, 0)
+	constructorChan := make(chan ConstructorRecord, recordsNumber)
 	n.FindAllConstructors(constructorChan, records)
 	close(constructorChan)
 	for constructor := range constructorChan {
@@ -27,10 +27,10 @@ func (n *Network) FindDevices() []*Device {
 	}
 
 	devices := make([]*Device, 0)
-	for i, record := range records {
+	for _, record := range records {
 		ip := strings.Trim(record.IP, "()")
 		device := Device{
-			Constructor: constructors[i],
+			Constructor: findByMac(record.Mac, constructors),
 			IP:          ip,
 			Mac:         record.Mac,
 		}
@@ -38,6 +38,16 @@ func (n *Network) FindDevices() []*Device {
 	}
 
 	return devices
+}
+
+func findByMac(mac string, constructors []ConstructorRecord) string {
+	for _, constructor := range constructors {
+		if constructor.Mac == mac {
+			return constructor.Constructor
+		}
+	}
+
+	return "not-found"
 }
 
 func GetARPRecords() []*ARPRecord {
@@ -62,7 +72,11 @@ func GetARPRecords() []*ARPRecord {
 	return arpList
 }
 
-func GetConstructor(mac string) string {
+func GetConstructor(mac string) ConstructorRecord {
+	result := ConstructorRecord{
+		Mac: mac,
+		Constructor: "not found",
+	}
 	url := "https://api.macvendors.com/"
 	resp, err := http.Get(url + mac)
 	if err != nil || resp.StatusCode != 200 {
@@ -71,20 +85,20 @@ func GetConstructor(mac string) string {
 			time.Sleep(time.Duration(dur) * time.Second)
 			return GetConstructor(mac)
 		} else {
-			return "not-found"
+			return result
 		}
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "not-found"
+		return result
 	}
 
-	company := string(body)
-	return company
+	result.Constructor = string(body)
+	return result
 }
 
-func (n *Network) FindAllConstructors(constructorChan chan string, records []*ARPRecord) {
+func (n *Network) FindAllConstructors(constructorChan chan ConstructorRecord, records []*ARPRecord) {
 	recordsNumber := int64(len(records))
 	bar := progressbar.Default(recordsNumber)
 	bar.Describe("mac lookup API")
@@ -108,4 +122,9 @@ func (n *Network) FindAllConstructors(constructorChan chan string, records []*AR
 
 type MACLookupBody struct {
 	Company string
+}
+
+type ConstructorRecord struct {
+	Mac string
+	Constructor string
 }
