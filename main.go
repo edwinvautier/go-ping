@@ -14,7 +14,8 @@ func main() {
 	network.FindIPs()
 	devices := network.FindDevices()
 	network.ScanAllDevicesPorts(&devices)
-
+	log.Info(len(devices), " devices found on your local network")
+	
 	for i, device := range devices {
 		log.Info("------------------")
 		log.Info("DEVICE ", i+1)
